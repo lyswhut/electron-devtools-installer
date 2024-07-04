@@ -1,4 +1,4 @@
-import { BrowserWindow, session } from 'electron';
+import { BrowserWindow, session, Session } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as semver from 'semver';
@@ -36,6 +36,7 @@ interface ExtensionOptions {
    * Options passed to session.loadExtension
    */
   loadExtensionOptions?: Record<any, any>;
+  session?: Session
 }
 
 /**
@@ -85,12 +86,13 @@ const install = (
   }
   const extensionName = IDMap[chromeStoreID];
   let extensionInstalled: boolean;
+  const _session = options.session ?? session.defaultSession
 
   // For Electron >=9.
-  if ((session.defaultSession as any).getExtension) {
+  if ((_session as any).getExtension) {
     extensionInstalled =
       !!extensionName &&
-      (session.defaultSession as any)
+      (_session as any)
         .getAllExtensions()
         .find((e: { name: string }) => e.name === extensionName);
   } else {
@@ -107,19 +109,19 @@ const install = (
     // Use forceDownload, but already installed
     if (extensionInstalled) {
       // For Electron >=9.
-      if ((session.defaultSession as any).removeExtension) {
-        const extensionId = (session.defaultSession as any)
+      if ((_session as any).removeExtension) {
+        const extensionId = (_session as any)
           .getAllExtensions()
           .find((e: { name: string }) => e.name).id;
-        (session.defaultSession as any).removeExtension(extensionId);
+        (_session as any).removeExtension(extensionId);
       } else {
         BrowserWindow.removeDevToolsExtension(extensionName);
       }
     }
 
     // For Electron >=9.
-    if ((session.defaultSession as any).loadExtension) {
-      return (session.defaultSession as any)
+    if ((_session as any).loadExtension) {
+      return (_session as any)
         .loadExtension(extensionFolder, loadExtensionOptions)
         .then((ext: { name: string }) => {
           return Promise.resolve(ext.name);
