@@ -1,4 +1,4 @@
 node_modules
-dist
+# dist
 xunit.xml
 yarn-error.log
